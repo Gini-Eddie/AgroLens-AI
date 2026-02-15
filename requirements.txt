@@ -1,0 +1,17 @@
+# --- Data Science & Processing ---
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+pillow
+
+# --- Notebooks ---
+notebook
+ipykernel
+
+# --- Web App (For later) ---
+streamlit
+fastapi
+uvicorn
+python-multipart

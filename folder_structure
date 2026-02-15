@@ -1,0 +1,8 @@
+AgroLens/
+└── backend/
+    ├── split_data.py   <-- Run the script from here
+    ├── training.ipynb
+    ├── model.py
+    └── data/
+        ├── train/      <-- All your crop folders go here first
+        └── val/        <-- This starts empty; script fills it

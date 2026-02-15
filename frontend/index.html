@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroLens AI | Plant Disease Detection</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary-color: #2e7d32; /* AgroLens Green */
+            --primary-hover: #1b5e20;
+            --background-color: #e8f5e9;
+            --text-color: #333;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- THE MAIN CARD --- */
+        .app-container {
+            background: white;
+            width: 90%;
+            max-width: 450px;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p.subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* --- UPLOAD AREA --- */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background-color: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #f1f8e9;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* The invisible file input */
+        #imageInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* --- PREVIEW IMAGE --- */
+        #preview-container {
+            display: none; /* Hidden by default */
+            margin-top: 1.5rem;
+        }
+
+        #preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: background 0.3s ease;
+            width: 100%;
+            display: none; /* Hidden until image is selected */
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* --- RESULTS --- */
+        #result {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            display: none; /* Hidden until prediction */
+        }
+
+        .disease-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #d32f2f; /* Red for alert */
+        }
+
+        .confidence-score {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* --- LOADING SPINNER --- */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>🌱 AgroLens AI</h1>
+        <p class="subtitle">Upload a leaf photo to detect diseases instantly.</p>
+
+        <div class="upload-area" id="uploadArea">
+            <span class="upload-icon">📷</span>
+            <div>Click here to upload an image</div>
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect()">
+        </div>
+
+        <div id="preview-container">
+            <img id="preview" src="" alt="Selected Leaf">
+        </div>
+
+        <button id="predictBtn" class="btn-primary" onclick="predictDisease()">🔍 Analyze Leaf</button>
+
+        <div id="loadingSpinner" class="spinner"></div>
+
+        <div id="result">
+            <div class="disease-name" id="diseaseName"></div>
+            <div class="confidence-score" id="confidenceScore"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:5000/predict";
+
+        // 1. Handle Image Selection
+        function handleImageSelect() {
+            const fileInput = document.getElementById('imageInput');
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('preview-container');
+            const predictBtn = document.getElementById('predictBtn');
+            const resultDiv = document.getElementById('result');
+            const uploadArea = document.getElementById('uploadArea');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    predictBtn.style.display = 'block'; // Show button
+                    uploadArea.style.display = 'none'; // Hide upload area to save space
+                    resultDiv.style.display = 'none'; // Hide old results
+                }
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // 2. Send to Backend
+        async function predictDisease() {
+            const fileInput = document.getElementById('imageInput');
+            const spinner = document.getElementById('loadingSpinner');
+            const resultDiv = document.getElementById('result');
+            const diseaseName = document.getElementById('diseaseName');
+            const confidenceScore = document.getElementById('confidenceScore');
+            const predictBtn = document.getElementById('predictBtn');
+
+            if (!fileInput.files[0]) return;
+
+            // Show Loading
+            predictBtn.style.display = 'none';
+            spinner.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Show Result
+                spinner.style.display = 'none';
+                resultDiv.style.display = 'block';
+
+                // Format the text (remove underscores)
+                let cleanName = data.class_name.replace(/_/g, ' ');
+
+                // Color logic: Green for healthy, Red for disease
+                if (cleanName.toLowerCase().includes('healthy')) {
+                    diseaseName.style.color = '#2e7d32'; // Green
+                    diseaseName.innerText = "✅ " + cleanName;
+                } else {
+                    diseaseName.style.color = '#d32f2f'; // Red
+                    diseaseName.innerText = "⚠️ " + cleanName;
+                }
+
+                confidenceScore.innerText = `Confidence: ${data.confidence}`;
+
+                // Show button again to allow retry
+                predictBtn.innerText = "Analyze Another";
+                predictBtn.style.display = 'block';
+                predictBtn.onclick = () => location.reload(); // Simple reset
+
+            } catch (error) {
+                console.error("Error:", error);
+                spinner.style.display = 'none';
+                resultDiv.style.display = 'block';
+                diseaseName.innerText = "Error Connecting to AI";
+                diseaseName.style.color = 'orange';
+                predictBtn.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# 1. Virtual Environments (Huge & System Specific)
+.venv/
+.venv1/
+env/
+venv/
+__pycache__/
+*.pyc
+
+# 2. IDE Settings (PyCharm/VS Code)
+.idea/
+.vscode/
+
+# 3. The Dataset (Too many images)
+backend/data/
+
+# 4. The Trained Model (Likely >100MB, GitHub will reject it)
+*.pth
+*.pt
+backend/agrolens_model_gpu.pth
+*.zip
+
+# 5. OS Junk
+.DS_Store
+Thumbs.db
